@@ -1,8 +1,11 @@
 import styled from 'styled-components'
 import logo from '../assets/logo.svg'
-import { Link } from 'react-router-dom'
+import { Link, Navigate } from 'react-router-dom'
 import { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { ToastContainer, toast } from 'react-toastify'
+import axios from 'axios'
+import { register } from '../utils/APIRoutes'
 
 function Register () {
   const [value, setValue] = useState({
@@ -11,10 +14,35 @@ function Register () {
     password: '',
     confirmPassword: ''
   })
+  const navigate = useNavigate()
 
-  const handleSubmit = e => {
+  const handleSubmit = async e => {
     e.preventDefault()
-    handleValidation()
+    if (handleValidation()) {
+      try {
+        const { name, email, password } = value
+
+        // Make the API call
+        const { data } = await axios.post(register, { name, email, password })
+        // console.log(JSON.stringify(data, null, 2));
+        // Process the response if it's successful
+        console.log("data from server"+data.success)
+        if (data.success) {
+            // toast.success(data.message
+          console.log('User created:', data.user)
+          navigate('/login')
+        }
+      } catch (error) {
+        // Handle the error if the status code is 400 or any other
+        if (error.response) {
+          console.error('Error response:', error.response.data.message)
+          toast.error(error.response.data.message, toastOptions)
+        } else {
+          console.error('Error message:', error.message)
+          toast.error('An unexpected error occurred.')
+        }
+      }
+    }
   }
 
   const toastOptions = {
@@ -28,6 +56,7 @@ function Register () {
     // transition: Bounce,
   }
   const handleValidation = () => {
+    console.log('in validation')
     const { name, email, password, confirmPassword } = value
     if (
       name === '' ||
@@ -36,17 +65,25 @@ function Register () {
       confirmPassword === ''
     ) {
       toast.error('Please fill all the fields', toastOptions)
+      return false
     }
 
     if (password !== confirmPassword) {
       toast.error('password and confirm password must be same!', toastOptions)
+
+      return false
     }
     if (name.length < 3) {
       toast.error('name must be at least 3 characters', toastOptions)
+
+      return false
     }
-    if(password.length < 8) {
-        toast.error('password must be at least 8 characters', toastOptions)
+    if (password.length < 8) {
+      toast.error('password must be at least 8 characters', toastOptions)
+
+      return false
     }
+    return true
   }
   const onChange = e => {
     setValue({ ...value, [e.target.name]: e.target.value })
