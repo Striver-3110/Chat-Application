@@ -30,6 +30,7 @@ function Register () {
         if (data.success) {
             // toast.success(data.message
           console.log('User created:', data.user)
+          localStorage.setItem('chat-app-user', JSON.stringify(data.user))
           navigate('/login')
         }
       } catch (error) {
